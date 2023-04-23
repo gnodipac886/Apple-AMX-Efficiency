@@ -22,14 +22,15 @@ int main() {
 
 	// A[1] = 1;
 	// B[1] = 1;
-	// _amx_set();
+	_amx_set();
+	// TODO: YOUR CODE HERE:
 	// AMX_LDX(A);
 	// AMX_LDY(B);
 	// _amx_dump_x_reg(0);
 	// _amx_dump_y_reg(0);
 	// AMX_MATINT(SHIFT_DATA(3, 4, 42));
 	// _amx_dump_z_reg();
-	// _amx_clr();
+	_amx_clr();
 
 	// matrix_transpose(A, AT, AMX_SIZE, K, sizeof(uint16_t));
 
