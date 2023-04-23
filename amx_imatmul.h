@@ -10,26 +10,19 @@ void print_imatrix(void * buf, int M, int N, size_t size) {
 		for (int j = 0; j < N; j++) {
 			switch (size) {
 				case sizeof(uint32_t):
-					printf("%x  ", ((uint32_t *)buf)[i * N + j]);
+					printf("%d  ", ((uint32_t *)buf)[i * N + j]);
 					break;
 
 				case sizeof(uint16_t):
-					printf("%x  ", ((uint16_t *)buf)[i * N + j]);
+					printf("%d  ", ((uint16_t *)buf)[i * N + j]);
 					break;
 
 				case sizeof(uint8_t):
-					printf("%x  ", ((uint8_t *)buf)[i * N + j]);
+					printf("%d  ", ((uint8_t *)buf)[i * N + j]);
 					break;
 			}
 		}
 		printf("\n");
-	}
-}
-
-void amx_get_z(uint32_t * buf, int M, int N) {
-	for (uint8_t row = 0; row < M; row++) {
-		uint64_t mask = LDSTZ_PAIR | (uint64_t)LDSTZ_Z_ROW(row) | (uint64_t)&buf[row * N];
-		AMX_STZ(mask);
 	}
 }
 
