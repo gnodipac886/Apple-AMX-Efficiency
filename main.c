@@ -4,58 +4,35 @@
 #include <string.h>
 #include <unistd.h>
 #include "amx.h"
-#include "amx_imatmul.h"
+#include "amx_fp32.h"
+#include "amx_fmatmul.h"
 
 #define NUM_XY_REG 2
 
+#define AMX_FLOAT32_CAPACITY 16
+
 int main() {
-	int K = 1;
-	uint16_t * A 	= (uint16_t *)malloc(AMX_SIZE * K * sizeof(uint16_t));
-	uint16_t * AT 	= (uint16_t *)malloc(AMX_SIZE * K * sizeof(uint16_t));
-	uint16_t * B 	= (uint16_t *)malloc(AMX_SIZE * K * sizeof(uint16_t));
-	uint32_t * C 	= (uint32_t *)malloc(AMX_SIZE * AMX_SIZE * sizeof(uint32_t));
-
-	uint32_t * golden = (uint32_t *)malloc(AMX_SIZE * AMX_SIZE * sizeof(uint32_t));
-
-	set_eye_matrix_u16(A, AMX_SIZE, K);
-	set_eye_matrix_u16(B, K, AMX_SIZE);
-
-	// A[1] = 1;
-	// B[1] = 1;
+	int K = AMX_FLOAT32_CAPACITY;
+	float * A 	= (float *)malloc(AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY * sizeof(float));
+	float * AT 	= (float *)malloc(AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY * sizeof(float));
+	float * B 	= (float *)malloc(AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY * sizeof(float));
+	float * C 	= (float *)malloc(AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY * sizeof(float));
+	
+//		set_eye_matrix_fp32(A, AMX_FLOAT32_CAPACITY, AMX_FLOAT32_CAPACITY);
+	set_matrix_fp32(A, AMX_FLOAT32_CAPACITY, AMX_FLOAT32_CAPACITY, 5.0);
+	matrix_transpose_fp32(A, AT, AMX_FLOAT32_CAPACITY, AMX_FLOAT32_CAPACITY, sizeof(float));
+	print_fpmatrix(AT, AMX_FLOAT32_CAPACITY, AMX_FLOAT32_CAPACITY, sizeof(float));
+	
+	set_eye_matrix_fp32(B, AMX_FLOAT32_CAPACITY, AMX_FLOAT32_CAPACITY);
+	
 	_amx_set();
-	// TODO: YOUR CODE HERE:
-	// AMX_LDX(A);
-	// AMX_LDY(B);
-	// _amx_dump_x_reg(0);
-	// _amx_dump_y_reg(0);
-	// AMX_MATINT(SHIFT_DATA(3, 4, 42));
-	// _amx_dump_z_reg();
+	amx_fp32_gemm_16x16(AT, B, C, AMX_FLOAT32_CAPACITY);
+	print_fpmatrix(C, AMX_FLOAT32_CAPACITY, AMX_FLOAT32_CAPACITY, sizeof(float));
 	_amx_clr();
-
-	// matrix_transpose(A, AT, AMX_SIZE, K, sizeof(uint16_t));
-
-	// printf("A: \n");
-	// print_imatrix(AT, AMX_SIZE, K, sizeof(uint16_t));
-
-	// printf("B: \n");
-	// print_imatrix(B, K, AMX_SIZE, sizeof(uint16_t));
-
-	// amx_u16gemm_32x32(AT, B, C, K);
-	// printf("C: \n");
-	// print_imatrix(C, AMX_SIZE, AMX_SIZE, sizeof(uint32_t));
-
-	// printf("\n\n");
-
-	// gemm_u16(A, B, golden, AMX_SIZE, K, AMX_SIZE);
-	// print_imatrix(golden, AMX_SIZE, AMX_SIZE, sizeof(uint32_t));
-
-	// compare_matrix_u32(C, golden, AMX_SIZE, AMX_SIZE);
-	// printf("Comparison: \n");
-	// print_imatrix(golden, AMX_SIZE, AMX_SIZE, sizeof(uint32_t));
-
+	
 	free(A);
+	free(AT);
 	free(B);
 	free(C);
-	free(golden);
 	return 0;
 }

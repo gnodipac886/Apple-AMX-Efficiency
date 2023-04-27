@@ -1,29 +1,13 @@
 #pragma once
 
 #include "amx.h"
-
-void print_fpmatrix(void * buf, int M, int N, size_t size) {
-	for (int i = 0; i < M; i++) {
-		for (int j = 0; j < N; j++) {
-			switch (size) {
-				case sizeof(float):
-					printf("%.3f  ", ((float *)buf)[i * N + j]);
-					break;
-
-				case sizeof(_Float16):
-					printf("%.3f  ", ((_Float16 *)buf)[i * N + j]);
-					break;
-			}
-		}
-		printf("\n");
-	}
-}
+#include "amx_fmatmul.h"
 
 void amx_fp32_dump_x_reg(int idx) {
 	amx_xy_reg_t temp[2];
 	AMX_STX(STXY_REG_IDX(idx) | (uint64_t)temp);
 
-	printf("Dumping AMX x reg[%.3f]: ", idx);
+	printf("Dumping AMX x reg[%d]: ", idx);
 	for (int i = 0; i < AMX_SIZE/2; i++) {
 		printf("%.3f ", ((float*)temp)[i]);
 	}
@@ -34,7 +18,7 @@ void amx_fp32_dump_y_reg(int idx) {
 	amx_xy_reg_t temp[2];
 	AMX_STY(STXY_REG_IDX(idx) | (uint64_t)temp);
 
-	printf("Dumping AMX y reg[%.3f]: ", idx);
+	printf("Dumping AMX y reg[%d]: ", idx);
 	for (int i = 0; i < AMX_SIZE/2; i++) {
 		printf("%.3f ", ((float*)temp)[i]);
 	}
@@ -43,13 +27,13 @@ void amx_fp32_dump_y_reg(int idx) {
 
 void _amx_fp32_dump_z_reg() {
 	// amx_z_reg_t temp;
-	float * temp = (float *)aligned_alloc(AMX_ALIGN_128, AMX_ALIGN_128 * AMX_SIZE);
+	float * ptr = (float *)aligned_alloc(AMX_ALIGN_128, AMX_Z_ROW_SIZE * AMX_SIZE);
 
 	printf("Dumping AMX z reg: \n");
-	amx_store_z((uint32_t*)temp, 0, 4);
-	print_fpmatrix(temp, AMX_SIZE/2, AMX_SIZE/2, sizeof(float));
+	amx_store_z((uint32_t*)ptr, 0, 4);
+	print_fpmatrix(ptr, AMX_SIZE/2, AMX_SIZE/2, sizeof(float));
 	printf("DONE PRINTING\n");
-	free(temp);
+	free(ptr);
 }
 
 void amx_perform_n_fouter_product(int n, uint64_t mask) {
@@ -85,7 +69,7 @@ void amx_fp32_gemm_16x16(const float * A, const float * B, float * C, int K) {
 
 	// get the result back
 	amx_store_z((uint32_t*)&amx_z_reg, 0, 4);
-	// _amx_fp32_dump_z_reg();
+	_amx_fp32_dump_z_reg();
 	memcpy(C, &amx_z_reg, (AMX_SIZE/2)*(AMX_SIZE/2)*sizeof(float));
 
 	// end AMX
