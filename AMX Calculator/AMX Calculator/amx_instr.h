@@ -176,7 +176,7 @@ void amx_store_z(uint32_t * buf, int interleave_cols, int condense_rows) {
 		uint64_t mask = LDSTZ_PAIR | (uint64_t)LDSTZ_Z_ROW(row*2) | (uint64_t)(&(temp[row * AMX_SIZE]));
 		AMX_STZ(mask);
 	}
-
+//
 	// interleave the registers
 	if (interleave_cols) {
 		for (uint8_t row = 0; row < AMX_SIZE; row++) {
@@ -185,11 +185,11 @@ void amx_store_z(uint32_t * buf, int interleave_cols, int condense_rows) {
 				buf[row * AMX_SIZE + (i<<1) + 1] 	= temp[row * AMX_SIZE + (AMX_SIZE>>1) + i];
 			}
 		}
-	} 
-	
+	}
+//
 	if (condense_rows) {
 		for (int i = 0; i < AMX_Z_NUM_REG / condense_rows; i++) {
-			memcpy(&(((uint8_t*)buf)[i * AMX_Z_REG_SIZE]), &(((uint8_t*)temp)[(i * condense_rows) * AMX_Z_REG_SIZE]), AMX_Z_ROW_SIZE * AMX_SIZE);
+			memcpy(&(((uint8_t*)buf)[i * AMX_Z_REG_SIZE]), &(((uint8_t*)temp)[(i * condense_rows) * AMX_Z_REG_SIZE]), AMX_Z_ROW_SIZE);
 		}
 	}
 	free(temp);

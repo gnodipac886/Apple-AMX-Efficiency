@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
-#include "amx_imatmul.h"
 
 // 32 x 32 of 16 bit
 #define AMX_SIZE 		32
@@ -121,12 +120,12 @@ amx_z_reg_t		amx_z_reg;
 
 int amx_started = 0;
 
-void _amx_set() {
+void _amx_set(void) {
 	// if (!amx_started)
 	AMX_SET();
 }
 
-void _amx_clr() {
+void _amx_clr(void) {
 	// if (amx_started) {
 	AMX_CLR();
 		// amx_started = 0;
@@ -177,7 +176,7 @@ void amx_store_z(uint32_t * buf, int interleave_cols, int condense_rows) {
 		uint64_t mask = LDSTZ_PAIR | (uint64_t)LDSTZ_Z_ROW(row*2) | (uint64_t)(&(temp[row * AMX_SIZE]));
 		AMX_STZ(mask);
 	}
-
+//
 	// interleave the registers
 	if (interleave_cols) {
 		for (uint8_t row = 0; row < AMX_SIZE; row++) {
@@ -186,11 +185,11 @@ void amx_store_z(uint32_t * buf, int interleave_cols, int condense_rows) {
 				buf[row * AMX_SIZE + (i<<1) + 1] 	= temp[row * AMX_SIZE + (AMX_SIZE>>1) + i];
 			}
 		}
-	} 
-	
+	}
+//
 	if (condense_rows) {
 		for (int i = 0; i < AMX_Z_NUM_REG / condense_rows; i++) {
-			memcpy(&(((uint8_t*)buf)[i * AMX_Z_REG_SIZE]), &(((uint8_t*)temp)[(i * condense_rows) * AMX_Z_REG_SIZE]), AMX_Z_ROW_SIZE * AMX_SIZE);
+			memcpy(&(((uint8_t*)buf)[i * AMX_Z_REG_SIZE]), &(((uint8_t*)temp)[(i * condense_rows) * AMX_Z_REG_SIZE]), AMX_Z_ROW_SIZE);
 		}
 	}
 	free(temp);

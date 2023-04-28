@@ -19,11 +19,13 @@
 {
     self = [super init];
     if (self) {
+        NSLog(@"Initializing AMX");
+        self.started    = false;
         self.matrix_a   = (float *)malloc(AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY * sizeof(float));
         matrix_aT       = (float *)malloc(AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY * sizeof(float));
         self.matrix_b   = (float *)malloc(AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY * sizeof(float));
         self.matrix_c   = (float *)malloc(AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY * sizeof(float));
-        
+        self.initialized= true;
     }
     return self;
 }
@@ -63,6 +65,8 @@
     double flops = 2.0 * (times * AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY) / interval;
     double gflops = flops / (10e9);
     NSLog(@"Performed %ld times, took %fs, GFlops: %f, MACs: %f", times, interval, gflops, gflops/2.0);
+    self.latency = interval;
+    self.gflops = gflops;
 }
 
 -(void) stress_raw_compute: (long) times {
@@ -79,19 +83,26 @@
     double flops = 2.0 * (times * AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY * AMX_FLOAT32_CAPACITY) / interval;
     double gflops = flops / (10e9);
     NSLog(@"Performed raw gemm %ld times, took %fs, GFlops: %f, MACs: %f", times, interval, gflops, gflops/2.0);
+    self.latency = interval;
+    self.gflops = gflops;
 }
 
 -(void) amx_set {
-    _amx_set();
+    if (!self.started)
+        _amx_set();
+    self.started    = true;
 }
 
 -(void) amx_clr {
-    _amx_clr();
+    if (self.started)
+        _amx_clr();
+    self.started    = false;
 }
 
 -(void) gemm {
     matrix_transpose(self.matrix_a, matrix_aT, AMX_FLOAT32_CAPACITY, AMX_FLOAT32_CAPACITY, sizeof(float));
     [self amx_set];
+    NSLog(@"Transposed");
     amx_fp32_gemm_16x16(matrix_aT, self.matrix_b, self.matrix_c, AMX_FLOAT32_CAPACITY);
     [self amx_clr];
 }

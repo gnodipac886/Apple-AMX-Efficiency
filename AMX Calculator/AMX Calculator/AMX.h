@@ -13,6 +13,9 @@
 @interface AMX : NSObject
 
 @property int M, K, N;
+@property bool started;
+@property bool initialized;
+@property double latency, gflops;
 @property float * matrix_a;
 @property float * matrix_b;
 @property float * matrix_c;
