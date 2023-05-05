@@ -1,0 +1,38 @@
+#
+# The following constraints are limitations of the hardware architecture and dataflow
+#
+architecture_constraints:
+  targets:
+    # NoC sending C in x direction, M in y direction; parallel-for loops for C and M only
+    - target: L3
+      type: spatial
+      permutation: CM
+      split: 1
+      factors: R=1 S=1 P=1 Q=1
+    # NoC sending C in x direction, M in y direction; parallel-for loops for C and M only
+    - target: L2
+      type: spatial
+      permutation: CM
+      split: 1
+      factors: R=1 S=1 P=1 Q=1
+    - target: x_reg
+      type: temporal
+      factors: R=1 S=1 M=1 C=1
+    - target: x_reg
+      type: bypass
+      keep: [Weights]
+      bypass: [Inputs, Outputs]
+    - target: y_reg
+      type: temporal
+      factors: P=1 Q=1 C=1 N=1
+    - target: y_reg
+      type: bypass
+      keep: [Inputs]
+      bypass: [Outputs, Weights]
+    - target: z_reg
+      type: temporal
+      factors: P=1 Q=1 M=1 N=1
+    - target: z_reg
+      type: bypass
+      keep: [Outputs]
+      bypass: [Inputs, Weights]
