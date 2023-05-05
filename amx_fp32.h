@@ -69,7 +69,7 @@ void amx_fp32_gemm_16x16(const float * A, const float * B, float * C, int K) {
 
 	// get the result back
 	amx_store_z((uint32_t*)&amx_z_reg, 0, 4);
-	_amx_fp32_dump_z_reg();
+	// _amx_fp32_dump_z_reg();
 	memcpy(C, &amx_z_reg, (AMX_SIZE/2)*(AMX_SIZE/2)*sizeof(float));
 
 	// end AMX
