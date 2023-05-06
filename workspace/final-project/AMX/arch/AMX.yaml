@@ -1,37 +1,51 @@
 # based on this description https://github.com/corsix/amx
 architecture:  # https://www.corsix.org/content/contrasting-intel-amx-and-apple-amx  
+  # ============================================================
+  # Architecture Description
+  # ============================================================
   version: 0.3
   subtree:
-    - name: system       # name of the design
+    - name: DRAM_system       # name of the design
       attributes:
         technology: 45nm #7nm
-      local: 
-        - name: L3
-          class: smartbuffer_SRAM
+      local:
+        - name: DRAM
+          class: DRAM
           attributes:
-            memory_depth: 16384
-            memory_width: 64
-            n_banks: 32
+            DRAM_type: LPDDR4
+            DRAM_width: 1024
             block-size: 4
             word-bits: 16
-            read_bandwidth: 16
-            write_bandwidth: 16
-        subtree:
-          - name: L2
-            local:
-              - name: L2
-                class: smartbuffer_SRAM
-                attributes:
-                  memory_depth: 16384
-                  memory_width: 64
-                  n_banks: 32
-                  block-size: 4
-                  word-bits: 16
-                  read_bandwidth: 16
-                  write_bandwidth: 16
-            subtree:
-              - name: PE[0..1023]
-              local:
+      subtree:
+        - name: L3_system
+          local:
+            - name: L3_to_DRAM
+              class: L3_to_DRAM
+              attributes:
+                technology: technology
+                L3_size: 67108864
+                L3_datawidth: 16
+                L3_block_size: 64
+                L3_associativity: 8
+                DRAM_width: DRAM_width
+                DRAM_type: DRAM_type
+          subtree:
+            - name: L2_system
+              local: 
+                - name: L2_to_L3
+                  class: L2_to_L3
+                  attributes:
+                    technology: technology
+                    L2_size: 134217728
+                    L2_datawidth: 16
+                    L2_block_size: 64
+                    L2_associativity: 8
+                    L3_width: 1024
+                    L3_depth: 65536
+                    L3_type: dcache
+              subtree:
+                - name: PE[0..1023]
+                  local:
       #           - name: pe_spad
       #             class: smartbuffer_RF
       #             attributes:
@@ -40,28 +54,27 @@ architecture:  # https://www.corsix.org/content/contrasting-intel-amx-and-apple-
       #               block_size: 1
       #               word-bits: 16
       #               meshX: 32
-                  - name: mac
-                    class: intmac
-                    attributes: 
-                      datawidth: 16
-                      meshX: 32
-                      meshY: 32
-                  - name: x_reg
-                    class: amx_reg   # storage reg - 32 16-bit elements
-                    attributes: 
-                      depth: 1       # number of reg?
-                      width: 16      # width in bits # 8/16/32/64-bit elements
-                      meshX: 32      
-                  - name: y_reg      # 32 16-bit elements
-                    class: amx_reg
-                    attributes: 
-                      depth: 1    
-                      width: 16      # width in bits # 8/16/32/64-bit elements
-                      meshY: 32
-                  - name: z_reg      # output of outer product stored here - 32x32 grid each perform 16-bit macs
-                    class: amx_reg
-                    attributes: 
-                      depth: 1
-                      width: 16      # datawidth in bits # 8/16/32/64-bit elements
-                      meshX: 32      # number of components in X direction (PE rows)
-                      meshY: 32      # number of components in Y direction (PE columns)
+                - name: mac
+                  class: intmac
+                  attributes: 
+                    datawidth: 16
+                    meshX: 32
+                    meshY: 32
+                - name: x_reg
+                  class: amx_reg   # storage reg - 32 16-bit elements
+                  attributes: 
+                    depth: 1       # number of reg?
+                    width: 16      # width in bits # 8/16/32/64-bit elements
+                    meshX: 32      
+                - name: y_reg      # 32 16-bit elements
+                  class: amx_reg
+                  attributes: 
+                    depth: 1    
+                    width: 16      # width in bits # 8/16/32/64-bit elements
+                    meshY: 32
+                - name: z_reg      # output of outer product stored here - 32x32 grid each perform 16-bit macs
+                  class: amx_reg
+                  attributes: 
+                    depth: 1
+                    width: 16      # datawidth in bits # 8/16/32/64-bit elements
+                    meshX: 32      # number of components in X direction (PE rows)
