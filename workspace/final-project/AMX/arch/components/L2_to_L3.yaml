@@ -1,0 +1,74 @@
+# Information from here: https://cpufun.substack.com/p/more-m1-fun-hardware-information
+# https://www.notebookcheck.net/M1-vs-M1-Max_12937_13843.247596.0.html
+# https://chipsandcheese.com/2022/02/11/going-armchair-quarterback-on-golden-coves-caches/
+# https://twitter.com/shachaf/status/1343014120002473984?lang=en
+#https://timeloop.csail.mit.edu/timeloop/input-formats/design/architecture/components
+# L2 134217728
+# L3 67108864
+compound_components:
+  version: 0.3
+  classes:
+    - name: L2_to_L3
+      attributes:
+        technology: 45nm
+        L2_size: 134217728
+        L2_datawidth: 16
+        L2_block_size: 64
+        L2_associativity: 8
+        L3_width: 1024
+        L3_depth: 65536
+        L3_type: dcache
+        # width cache_datawidth * cache_block_size
+      subcomponents:
+      - name: L2
+        class: L2
+        attributes: 
+          technology: technology
+          type: dcache
+          size: L2_size
+          associativity: L2_associativity
+          block_size: L2_block_size 
+          datawidth: L2_datawidth
+          n_rd_ports: 1
+          n_wr_ports: 1 
+          n_rdwr_ports: 1
+          n_banks: 1 
+          data_latency: 18
+          depth: 131072
+          #tag_size: 64 ? 
+          #mshr_size: 4 #?
+          #write_buffer_size: 8 #?
+          #clockrate: 999 #?
+      - name: L3
+        class: L3
+        attributes:
+          technology: technology
+          type: L3_type
+          width: L3_width
+        actions:
+        - name: read_hit
+          subcomponents: 
+          - name: L2
+            actions: 
+            - name: read_access
+        - name: write_hit
+          subcomponents:
+          - name: L3
+            actions: 
+            - name: write
+          - name: L2
+            actions: 
+            - name: write_access
+        - name: read_miss
+          subcomponents: 
+          - name: L2
+            actions: 
+            - name: read_access
+          - name: L3
+            actions: 
+            - name: read
+        - name: write_miss
+          subcomponents: 
+          - name: L3
+            actions:
+            - name: write

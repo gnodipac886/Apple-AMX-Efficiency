@@ -1,0 +1,23 @@
+## help limit tge search space to speed up dse
+mapspace:
+  targets:
+    # intuitive optimization to not tile R and S at the L3 level
+    - target: L3
+      type: temporal
+      factors: R=1 S=1
+    # intuitive optimization according to architecture dimensions
+    - target: L3
+      type: spatial
+      factors:  M=32 C=32
+    # intuitive optimization to not tile R and S at the L2 level
+    - target: L2
+      type: temporal
+      factors: R=1 S=1
+    # intuitive optimization according to architecture dimensions
+    - target: L2
+      type: spatial
+      factors:  M=32 C=32
+    # optimization to constrain the amplification factor of R and S to only one register
+    - target: z_reg
+      type: temporal
+      factors: R=1 S=1
