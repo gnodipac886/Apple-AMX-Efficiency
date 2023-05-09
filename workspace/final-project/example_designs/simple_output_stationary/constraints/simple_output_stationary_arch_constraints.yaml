@@ -4,7 +4,7 @@
 
 architecture_constraints:
   targets:
-    #  pe spad only stored outputs
+    # pe spad only stored outputs
     - target: pe_spad
       type: bypass
       bypass: [Inputs, Weights]
@@ -14,11 +14,11 @@ architecture_constraints:
       type: temporal
       permutation: RSPQ
     # NoC sending C in x direction, M in y direction; parallel-for loops for C and M only
-    - target: shared_glb
-      type: spatial
-      permutation: CM
-      split: 1
-      factors: R=1 S=1 P=1 Q=1
+    #- target: L2
+    #  type: spatial
+    #  permutation: CM
+    #  split: 1
+    #  factors: R=1 S=1 P=1 Q=1
     # enforce the registers to only store 1 data of the datatype it stores
     - target: weight_reg
       type: temporal

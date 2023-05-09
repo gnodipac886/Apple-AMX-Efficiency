@@ -1,0 +1,81 @@
+architecture:
+  # ============================================================
+  # Architecture Description
+  # ============================================================
+  version: 0.3
+  subtree:
+#     - name: system
+#       local:
+#         - name: DRAM
+#           class: DRAM
+#           attributes:
+#             type: LPDDR4
+#             width: 64
+#             block-size: 4
+#             word-bits: 16
+#       subtree:
+           - name: system
+             local:
+               - name: memory_heirarchy
+                 class: write_through_dcache
+                 attributes:
+                   technology: 32nm
+                   memory_depth: 16384
+                   memory_width: 64
+                   n_banks: 32
+                   block-size: 4
+                   word-bits: 16
+                   read_bandwidth: 16
+                   write_bandwidth: 16
+             subtree:
+               - name: simple_os
+                 attributes:
+                   technology: 32nm
+                 local:
+                   - name: L2
+                     class: smartbuffer_SRAM
+                     attributes:
+                       memory_depth: 16384
+                       memory_width: 64
+                       n_banks: 32
+                       block-size: 4
+                       word-bits: 16
+                       read_bandwidth: 16
+                       write_bandwidth: 16
+                 subtree:
+                 - name: PE[0..1023]
+                   local:
+                     - name: pe_spad
+                       class: smartbuffer_SRAM
+                       attributes:
+                         memory_depth: 192
+                         memory_width: 16
+                         block-size: 1
+                         word-bits: 16
+                         meshX: 32
+                         meshY: 32
+                     - name: mac
+                       class: intmac
+                       attributes:
+                         datawidth: 16
+                         meshX : 32
+                         meshY : 32
+                     # input and output registers for the mac unit
+                     - name: weight_reg
+                       class: reg_storage
+                       attributes:
+                         depth: 1
+                         width: 16           # width in bits
+                         meshX: 32
+                     - name: input_activation_reg
+                       class: reg_storage
+                       attributes:
+                         depth: 1
+                         width: 16           # width in bits
+                         meshX: 32
+                     - name: output_activation_reg
+                       class: reg_storage
+                       attributes:
+                         depth: 1
+                         width: 16           # width in bits
+                         meshX: 32

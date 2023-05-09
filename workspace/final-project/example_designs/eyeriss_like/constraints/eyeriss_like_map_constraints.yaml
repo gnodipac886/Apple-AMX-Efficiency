@@ -3,7 +3,8 @@
 # but help limit the search space to speed up search
 #
 
-mapspace_constraints:
+#mapspace_constraints:
+mapspace:
   targets:
     # intuitive optimization to reduce map space size
     # the factors of these are 1 anyways, so the order does not really matter

@@ -1,0 +1,78 @@
+# Information from here: https://cpufun.substack.com/p/more-m1-fun-hardware-information
+# https://www.notebookcheck.net/M1-vs-M1-Max_12937_13843.247596.0.html
+# https://chipsandcheese.com/2022/02/11/going-armchair-quarterback-on-golden-coves-caches/
+# https://twitter.com/shachaf/status/1343014120002473984?lang=en
+#https://timeloop.csail.mit.edu/timeloop/input-formats/design/architecture/components
+# L2 134217728
+# L3 67108864
+compound_components:
+  version: 0.3
+  classes: 
+  - name: write_through_cachecache
+    attributes:
+      technology: 32nm
+      cache_size: 67108864
+      cache_datawidth: 16
+      cache_block_size: 64
+      cache_associativity: 8
+      DRAM_width: 1024
+      DRAM_type: LPDDR4
+      # width cache_datawidth * cache_block_size
+      
+    subcomponents:
+    - name: cache
+      class: cache
+      attributes: 
+        technology: technology
+        cache_type: dcache
+        size: cache_size
+        associativity: cache_associativity
+        block_size: cache_block_size 
+        datawidth: cache_datawidth
+        tag_size: 1
+        n_rd_ports: 1
+        n_wr_ports: 1
+        n_rdwr_ports: 1
+        n_banks: 1
+        data_latency: 2
+        mshr_size: 18
+        write_buffer_size: 131072
+        clockrate: 999
+    - name: DRAM
+      class: write_through_dcache
+      attributes:
+          technology: technology
+          cache_size: cache_size
+          cache_datawidth: cache_datawidth
+          cache_block_size: cache_block_size
+          cache_associativity: cache_associativity
+          DRAM_width: DRAM_width
+          DRAM_type: DRAM_type
+        
+    actions:
+      - name: read_hit
+        subcomponents: 
+        - name: cache
+          actions: 
+          - name: read_access
+      - name: write_hit
+        subcomponents:
+        - name: DRAM
+          actions: 
+          - name: write
+        - name: cache
+          actions: 
+          - name: write_access
+      - name: read_miss
+        subcomponents: 
+        - name: cache
+          actions: 
+          - name: read_access
+        - name: DRAM
+          actions: 
+          - name: read
+      - name: write_miss
+        subcomponents: 
+        - name: DRAM
+          actions:
+          - name: write
