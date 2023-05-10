@@ -8,6 +8,14 @@
 import Foundation
 import SwiftUI
 
+class stressTestWrapper: ObservableObject {
+    @Published var latency: Double = 0.0
+    @Published var gflops: Double = 0.0
+    @Published var loop_pow: Float = 1
+    @Published var loops: Float = 10000000
+    @Published var is_computing: Bool = false
+}
+
 class MatrixViewSelector: ObservableObject {
     @Published var option: String = "Matrix A"
 }
@@ -176,6 +184,27 @@ struct matrixSelectView: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(matSelectedView.option == matCase ? .blue : .gray)
+            }
+        }
+    }
+}
+
+struct resultMatrixView: View {
+    @ObservedObject var matrixC: AMXMatrixWrapper
+    
+    var body: some View {
+        Grid {
+            ForEach(0..<Int(matrixC.numRows), id: \.self) { i in
+                GridRow {
+                    ForEach(0..<Int(matrixC.numCols), id: \.self) { j in
+                        if (i < matrixC.fpmatrix.count) {
+                            if (j < matrixC.fpmatrix[i].count) {
+                                Text(String(format: "%.2f", matrixC.fpmatrix[i][j]))
+                            }
+                        }
+
+                    }
+                }
             }
         }
     }

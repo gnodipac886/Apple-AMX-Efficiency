@@ -29,6 +29,9 @@ int amx_raw_thread(int sleep) {
 		}
 		iter++;
 	}
+	free(A);
+	free(B);
+	free(C);
 	return iter;
 }
 
@@ -50,12 +53,13 @@ int main(int argc, char * argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 	if (rank == 0) {
-		if (argc > 2)
-			power_thread(atoi(argv[1]), atoi(argv[2]));
-	} else {
 		#pragma omp parallel num_threads(2) 
 		{
-			int iter = amx_raw_thread(atoi(argv[3]));
+			if (argc > 2 && omp_get_thread_num() == 0)
+				power_thread(atoi(argv[1]), atoi(argv[2]));
+			else {
+				int iter = amx_raw_thread(atoi(argv[3]));
+			}
 		}
 	}
 

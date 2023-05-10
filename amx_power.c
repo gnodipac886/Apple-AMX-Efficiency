@@ -3,7 +3,7 @@
 #include <mpi.h>
 #include <omp.h>
 #include <stdlib.h>
-#include <sched.h>
+#include <pthread/qos.h>
 
 #define FLUSH(ptr) __asm("DC CVAC, %[value]" : : [value]"r" (ptr) :)
 
@@ -22,11 +22,7 @@
 									AMX_LDY(ldx_mask);\
 									FP_RAW(ldx_mask, mac_mask);
 
-#define FP_LDST(ldx_mask, mac_mask) FP_LDS(ldx_mask, mac_mask) \
-									for (uint8_t row = 0; row < AMX_SIZE; row++) { \
-										uint64_t mask = LDSTZ_PAIR | (uint64_t)LDSTZ_Z_ROW(row*2) | (uint64_t)(&(((uint32_t*)&amx_z_reg)[row * AMX_SIZE])); \
-										AMX_STZ(mask); \
-									}
+#define FP_LDST(ldx_mask, mac_mask) FP_LDS(ldx_mask, mac_mask)
 
 #define FP_LDST_FLUSH(ldx_mask, mac_mask) FP_LDS_FLUSH(ldx_mask, mac_mask) \
 									for (uint8_t row = 0; row < AMX_SIZE; row++) { \
@@ -77,6 +73,19 @@ int amx_raw_thread(int sleep) {
 			INSTR(ld_mask, mac_mask);
 			INSTR(ld_mask, mac_mask);
 			INSTR(ld_mask, mac_mask);
+
+			INSTR(ld_mask, mac_mask);
+			INSTR(ld_mask, mac_mask);
+			INSTR(ld_mask, mac_mask);
+			INSTR(ld_mask, mac_mask);
+			INSTR(ld_mask, mac_mask);
+			INSTR(ld_mask, mac_mask);
+			#ifdef AMX_LDST
+			for (uint8_t row = 0; row < AMX_SIZE; row++) {
+				uint64_t mask = LDSTZ_PAIR | (uint64_t)LDSTZ_Z_ROW(row*2) | (uint64_t)(&(((uint32_t*)&amx_z_reg)[row * AMX_SIZE]));
+				AMX_STZ(mask);
+			}
+			#endif
 		}
 		iter++;
 	}
@@ -92,10 +101,11 @@ void power_thread(int interval, int seconds) {
 	usleep((seconds+2) * 1000000);
 	system("sudo killall powermetrics");
 	printf("Process %d: iter: %d\n", rank, iter);
+	// system("sudo killall amx_power");
 	// exit(0);
 	stop = 1;
-	MPI_Abort(MPI_COMM_WORLD, 0);
-	// MPI_Bcast(&stop, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	// MPI_Abort(MPI_COMM_WORLD, 0);
+	MPI_Bcast(&stop, 1, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
 void recv_thread() {
@@ -105,6 +115,8 @@ void recv_thread() {
 }
 
 int main(int argc, char * argv[]) {
+	// int e = pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
+	// fprintf(stderr, "Pthread error: %d\n", e);
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -122,9 +134,9 @@ int main(int argc, char * argv[]) {
 	} else {
 		// #pragma omp parallel num_threads(2) 
 		// {
-		// 	if (argc > 2 && omp_get_thread_num() == 0)
-		// 		recv_thread();
-		// 	else {
+			// if (argc > 2 && omp_get_thread_num() == 0)
+			// 	recv_thread();
+			// else {
 				int iter = amx_raw_thread(atoi(argv[3]));
 			// }
 		// }

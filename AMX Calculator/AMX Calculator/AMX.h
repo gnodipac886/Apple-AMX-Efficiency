@@ -27,6 +27,11 @@
 -(void) set_random_matrix: (float *) matrix;
 -(void) stress: (long) times;
 -(void) stress_raw_compute: (long) times;
+-(void) stress_ld: (long) times;
+-(void) stress_ldst: (long) times;
+-(void) stress_ldst_flush: (long) times;
+-(void) stress_cpu_naive: (long) times;
+-(void) async_stress_raw_compute: (long) times completion: (void(^)(void)) callback;
 
 -(void) amx_set;
 -(void) amx_clr;

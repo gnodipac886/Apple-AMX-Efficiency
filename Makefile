@@ -20,13 +20,13 @@ power_raw:
 	$(CXX) $(POWER_FLAGS) $(MPI_FLAGS) -DAMX_RAW amx_power.c -o amx_power
 
 power_ld:
-	$(CXX) $(POWER_FLAGS) -DAMX_LD amx_power.c -o amx_power
+	$(CXX) $(POWER_FLAGS) $(MPI_FLAGS) -DAMX_LD amx_power.c -o amx_power
 
 power_ld_flush:
 	$(CXX) $(POWER_FLAGS) -DAMX_LD_FLUSH amx_power.c -o amx_power
 
 power_ldst:
-	$(CXX) $(POWER_FLAGS) -DAMX_LDST amx_power.c -o amx_power
+	$(CXX) $(POWER_FLAGS) $(MPI_FLAGS) -DAMX_LDST amx_power.c -o amx_power
 
 power_ldst_flush:
 	$(CXX) $(POWER_FLAGS) -DAMX_LDST_FLUSH amx_power.c -o amx_power

@@ -5,6 +5,16 @@
 #include <stdlib.h>
 #include "amx_instr.h"
 
+void outer_product_mmm(float *C, float const *A, float const *B, int M, int N, int K) {
+    for (int i = 0; i < K; i++) {
+        for (int j = 0; j < M; j++) {
+            for (int k = 0; k < N; k++) {
+                C[j * N + k] += A[j * K + i] * B[i * N + k];
+            }
+        }
+    }
+}
+
 void print_fpmatrix(void * buf, int M, int N, size_t size) {
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {

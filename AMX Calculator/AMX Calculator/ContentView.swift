@@ -9,24 +9,32 @@ import SwiftUI
 
 var offScreenCol: Float = 7.0
 
-struct resultMatrixView: View {
-    @ObservedObject var matrixC: AMXMatrixWrapper
+struct stressButtonView: View {
+    @State var amx: AMX
+    @State var btn_name: String
+    @ObservedObject var stresser: stressTestWrapper
     
     var body: some View {
-        Grid {
-            ForEach(0..<Int(matrixC.numRows), id: \.self) { i in
-                GridRow {
-                    ForEach(0..<Int(matrixC.numCols), id: \.self) { j in
-                        if (i < matrixC.fpmatrix.count) {
-                            if (j < matrixC.fpmatrix[i].count) {
-                                Text(String(format: "%.2f", matrixC.fpmatrix[i][j]))
-                            }
-                        }
-
-                    }
+        Button(action: {
+            if ((btn_name.contains("CPU") && stresser.loop_pow >= 4) || (btn_name.contains("AMX") && stresser.loop_pow > 5)) {
+                stresser.is_computing = true
+            }
+            Task {
+                await async_stress(name: btn_name, amx: self.amx, times: Int(powf(10.0, stresser.loop_pow)), stresser: stresser)
+//                        await self.amx.async_stress_raw_compute(Int(powf(10.0, loop_pow)))
+                stresser.is_computing = false
+                if (!btn_name.contains("Vector")) {
+                    self.stresser.latency = self.amx.latency;
+                    self.stresser.gflops = self.amx.gflops;
                 }
             }
+        }) {
+            Text(stresser.is_computing ? "⏳" : btn_name.replacingOccurrences(of: " ", with: "\n"))
+//            .frame(minWidth: 5)
         }
+        .buttonStyle(.bordered)
+        .tint(.red)
+        .disabled(stresser.is_computing)
     }
 }
 
@@ -34,60 +42,42 @@ struct resultView: View {
 //    @State var matrix = [[Float]](repeating: [Float](repeating: 0.0, count: Int(AMX_FLOAT32_CAPACITY)), count: Int(AMX_FLOAT32_CAPACITY))
     @ObservedObject var matrixC: AMXMatrixWrapper
     @State var amx: AMX
-    @State var latency: Double = 0.0
-    @State var gflops: Double = 0.0
-    @State var loop_pow: Float = 1
-    @State var loops: Float = 10000000
-    @State var AMXButtonText = "🙀AMX Stress🙀"
-    @State var PyTorchButtonText = "🔥PyTorch Stress🗽"
+    @StateObject var stresser: stressTestWrapper = stressTestWrapper()
     
     var body: some View {
         let matCView = resultMatrixView(matrixC: matrixC)
+        let amxRawBtnView = stressButtonView(amx: self.amx, btn_name: "AMX RAW", stresser: self.stresser)
+        let amxLDBtnView = stressButtonView(amx: self.amx, btn_name: "AMX LD", stresser: self.stresser)
+        let amxLDSTBtnView = stressButtonView(amx: self.amx, btn_name: "AMX LDST", stresser: self.stresser)
+        let cpuNaiveBtnView = stressButtonView(amx: self.amx, btn_name: "CPU Naïve", stresser: self.stresser)
+        let cpuVectorBtnView = stressButtonView(amx: self.amx, btn_name: "CPU Vector", stresser: self.stresser)
+        
         VStack {
             Spacer(minLength: UIScreen.screenHeight * 0.1)
             if matrixC.numCols > offScreenCol {
-                ScrollView(.horizontal) {
+                ScrollView(.horizontal) { 
                     matCView
                 }
             } else {
                 matCView
             }
             Spacer(minLength: UIScreen.screenHeight * 0.05)
-            Text(String(format: "Latency: %.2fs, GFLops: %.2f", latency, gflops))
+            Text(String(format: "Latency: %.2fs, GFLops: %.4f", stresser.latency, stresser.gflops))
             HStack {
-                Text(String(format: "Loops: 10e%d", Int(loop_pow)))
+                Text(String(format: "Loops: 10e%d", Int(stresser.loop_pow)))
                     .frame(maxWidth: UIScreen.screenWidth*0.25, alignment: .leading)
                     .padding(.leading)
-                Slider(value: $loop_pow, in: 1...Float(8),step: 1)
+                Slider(value: $stresser.loop_pow, in: 1...Float(8),step: 1)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.trailing)
             }
             
             HStack {
-                Button(action: {
-                    self.amx.stress_raw_compute(Int(powf(10.0, loop_pow)))
-                    self.latency = self.amx.latency;
-                    self.gflops = self.amx.gflops;
-                }) {
-                    Text(self.PyTorchButtonText)
-                    .frame(minWidth: 150)
-                }
-                .buttonStyle(.bordered)
-                .tint(.red)
-                
-                Button(action: {
-                    self.AMXButtonText = "⏳"
-                    print(self.AMXButtonText)
-                    self.amx.stress_raw_compute(Int(powf(10.0, loop_pow)))
-                    self.AMXButtonText = "🙀AMX Stress🙀"
-                    self.latency = self.amx.latency;
-                    self.gflops = self.amx.gflops;
-                }) {
-                    Text(self.AMXButtonText)
-                    .frame(minWidth: 150)
-                }
-                .buttonStyle(.bordered)
-                .tint(.red)
+                cpuNaiveBtnView
+                cpuVectorBtnView
+                amxRawBtnView
+                amxLDBtnView
+                amxLDSTBtnView
             }
 //            Spacer(minLength: UIScreen.screenHeight * 0.2)
         }

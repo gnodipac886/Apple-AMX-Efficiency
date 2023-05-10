@@ -3,6 +3,19 @@
 #include "amx_instr.h"
 #include "amx_fmatmul.h"
 
+#define FLUSH(ptr) __asm("DC CVAC, %[value]" : : [value]"r" (ptr) :)
+
+#define AMX_FP_LD(ldx_mask, mac_mask)   AMX_LDX(ldx_mask);\
+                                        AMX_LDY(ldx_mask);\
+                                        AMX_MATFP(mac_mask);
+
+#define AMX_FP_LDST_FLUSH(ldx_mask, mac_mask) AMX_FP_LD(ldx_mask, mac_mask)\
+                                        for (uint8_t row = 0; row < AMX_SIZE; row++) { \
+                                            uint64_t mask = LDSTZ_PAIR | (uint64_t)LDSTZ_Z_ROW(row*2) | (uint64_t)(&(((uint32_t*)&amx_z_reg)[row * AMX_SIZE])); \
+                                            FLUSH(&((uint32_t*)&amx_z_reg)[row * AMX_SIZE]);\
+                                            AMX_STZ(mask); \
+                                        }
+
 void amx_fp32_dump_x_reg(int idx) {
     amx_xy_reg_t temp[2];
     AMX_STX(STXY_REG_IDX(idx) | (uint64_t)temp);
