@@ -3,7 +3,7 @@ compound_components:
   classes:
     - name: reg_storage
       attributes:
-        technology: 45nm
+        technology: 32nm
         latency: 1ns
         width: 16
         depth: 1

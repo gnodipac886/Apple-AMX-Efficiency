@@ -16,7 +16,7 @@ architecture:
       subtree:
         - name: eyeriss
           attributes:
-            technology: 45nm
+            technology: 32nm #45nm
           local:
             - name: shared_glb
               class: smartbuffer_SRAM

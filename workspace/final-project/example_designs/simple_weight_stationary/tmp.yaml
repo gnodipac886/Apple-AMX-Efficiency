@@ -1,0 +1,344 @@
+%YAML 1.2
+---
+architecture:
+  subtree:
+  - local:
+    - attributes:
+        block-size: 4
+        type: LPDDR4
+        width: 64
+        word-bits: 16
+      class: DRAM
+      name: DRAM
+    name: system
+    subtree:
+    - attributes:
+        technology: 45nm
+      local:
+      - attributes:
+          block-size: 4
+          memory_depth: 16384
+          memory_width: 64
+          n_banks: 32
+          read_bandwidth: 16
+          word-bits: 16
+          write_bandwidth: 16
+        class: smartbuffer_SRAM
+        name: shared_glb
+      name: simple_ws
+      subtree:
+      - local:
+        - attributes:
+            block-size: 1
+            memory_depth: 192
+            memory_width: 16
+            meshX: 16
+            word-bits: 16
+          class: smartbuffer_RF
+          name: pe_spad
+        - attributes:
+            datawidth: 16
+            meshX: 16
+          class: intmac
+          name: mac
+        - attributes:
+            depth: 1
+            meshX: 16
+            width: 16
+          class: reg_storage
+          name: weight_reg
+        - attributes:
+            depth: 1
+            meshX: 16
+            width: 16
+          class: reg_storage
+          name: input_activation_reg
+        - attributes:
+            depth: 1
+            meshX: 16
+            width: 16
+          class: reg_storage
+          name: output_activation_reg
+        name: PE[0..255]
+  version: 0.3
+architecture_constraints:
+  targets:
+  - bypass:
+    - Inputs
+    - Outputs
+    keep:
+    - Weights
+    target: pe_spad
+    type: bypass
+  - permutation: PQRS
+    target: pe_spad
+    type: temporal
+  - factors: R=1 S=1 P=1 Q=1
+    permutation: CM
+    split: 1
+    target: shared_glb
+    type: spatial
+  - factors: R=1 S=1 M=1 C=1
+    target: weight_reg
+    type: temporal
+  - bypass:
+    - Inputs
+    - Outputs
+    keep:
+    - Weights
+    target: weight_reg
+    type: bypass
+  - factors: P=1 Q=1 C=1 N=1
+    target: input_activation_reg
+    type: temporal
+  - bypass:
+    - Outputs
+    - Weights
+    keep:
+    - Inputs
+    target: input_activation_reg
+    type: bypass
+  - factors: P=1 Q=1 M=1 N=1
+    target: output_activation_reg
+    type: temporal
+  - bypass:
+    - Inputs
+    - Weights
+    keep:
+    - Outputs
+    target: output_activation_reg
+    type: bypass
+compound_components:
+  classes:
+  - actions:
+    - name: access
+      subcomponents:
+      - actions:
+        - name: access
+        name: storage
+    attributes:
+      depth: 1
+      latency: 1ns
+      technology: 45nm
+      width: 16
+    name: reg_storage
+    subcomponents:
+    - attributes:
+        datawidth: width
+        latency: latency
+        technology: technology
+      class: reg
+      name: storage
+  - actions:
+    - arguments:
+        address_delta: 0..n_banks
+        data_delta: 0..1
+      name: write
+      subcomponents:
+      - actions:
+        - arguments:
+            address_delta: address_delta
+            data_delta: data_delta
+          name: write
+        name: storage
+      - actions:
+        - name: add
+        name: address_generators[0]
+      - actions:
+        - name: idle
+        name: address_generators[1]
+    - arguments:
+        address_delta: 0..n_banks
+        data_delta: 0..1
+      name: read
+      subcomponents:
+      - actions:
+        - arguments:
+            address_delta: address_delta
+            data_delta: data_delta
+          name: read
+        name: storage
+      - actions:
+        - name: add
+        name: address_generators[1]
+      - actions:
+        - name: idle
+        name: address_generators[0]
+    - name: idle
+      subcomponents:
+      - actions:
+        - name: idle
+        name: storage
+      - actions:
+        - name: idle
+        name: address_generators[0..1]
+    attributes:
+      memory_depth: 12
+      memory_width: 16
+      n_banks: 1
+      n_buffets: 1
+      n_rdwr_ports: 2
+      technology: 45nm
+    name: smartbuffer_RF
+    subcomponents:
+    - attributes:
+        depth: memory_depth
+        n_banks: n_banks
+        n_rdwr_ports: n_rdwr_ports
+        technology: technology
+        width: memory_width
+      class: regfile
+      name: storage
+    - attributes:
+        technology: technology
+        width: log(memory_depth)
+      class: intadder
+      name: address_generators[0..1]
+  - actions:
+    - arguments:
+        address_delta: 0..n_banks
+        data_delta: 0..1
+      name: write
+      subcomponents:
+      - actions:
+        - arguments:
+            address_delta: address_delta
+            data_delta: data_delta
+          name: write
+        name: storage
+      - actions:
+        - name: count
+        name: address_generators[0]
+      - actions:
+        - name: idle
+        name: address_generators[1]
+    - arguments:
+        address_delta: 0..n_banks
+        data_delta: 0..1
+      name: read
+      subcomponents:
+      - actions:
+        - arguments:
+            address_delta: address_delta
+            data_delta: data_delta
+          name: read
+        name: storage
+      - actions:
+        - name: add
+        name: address_generators[1]
+      - actions:
+        - name: idle
+        name: address_generators[0]
+    - name: idle
+      subcomponents:
+      - actions:
+        - name: idle
+        name: storage
+      - actions:
+        - name: idle
+        name: address_generators[0..1]
+    attributes:
+      memory_depth: 12
+      memory_width: 16
+      n_banks: 1
+      n_buffets: 1
+      n_rdwr_ports: 2
+      technology: 45nm
+    name: smartbuffer_SRAM
+    subcomponents:
+    - attributes:
+        depth: memory_depth
+        n_banks: n_banks
+        n_rdwr_ports: n_rdwr_ports
+        technology: technology
+        width: memory_width
+      class: SRAM
+      name: storage
+    - attributes:
+        technology: technology
+        width: log(memory_depth)
+      class: intadder
+      name: address_generators[0..1]
+  version: 0.3
+mapper:
+  algorithm: random-pruned
+  live-status: true
+  max-permutations-per-if-visit: 16
+  num-threads: 8
+  optimization-metrics:
+  - delay
+  - energy
+  timeout: 15000
+  victory-condition: 3000
+mapspace_constraints:
+  targets:
+  - factors: R=1 S=1
+    target: shared_glb
+    type: temporal
+  - factors: M=16 C=16
+    target: shared_glb
+    type: spatial
+  - factors: R=1 S=1
+    target: DRAM
+    type: temporal
+  - factors: R=1 S=1
+    target: output_activation_reg
+    type: temporal
+problem:
+  instance:
+    C: 3
+    Hdilation: 1
+    Hstride: 4
+    M: 96
+    N: 1
+    P: 55
+    Q: 55
+    R: 11
+    S: 11
+    Wdilation: 1
+    Wstride: 4
+  shape:
+    coefficients:
+    - default: 1
+      name: Wstride
+    - default: 1
+      name: Hstride
+    - default: 1
+      name: Wdilation
+    - default: 1
+      name: Hdilation
+    data-spaces:
+    - name: Weights
+      projection:
+      - - - C
+      - - - M
+      - - - R
+      - - - S
+    - name: Inputs
+      projection:
+      - - - N
+      - - - C
+      - - - R
+          - Wdilation
+        - - P
+          - Wstride
+      - - - S
+          - Hdilation
+        - - Q
+          - Hstride
+    - name: Outputs
+      projection:
+      - - - N
+      - - - M
+      - - - Q
+      - - - P
+      read-write: true
+    dimensions:
+    - C
+    - M
+    - R
+    - S
+    - N
+    - P
+    - Q
+    name: CNN-Layer
