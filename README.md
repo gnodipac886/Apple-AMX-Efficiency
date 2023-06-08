@@ -1,5 +1,7 @@
 # AMX_sandbox
 
+![poster](poster.png)
+
 ### Instructions:
 To test with numpy and cython:
 
