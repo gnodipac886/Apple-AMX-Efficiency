@@ -1,4 +1,4 @@
-# AMX_sandbox
+# Apple-AMX-Efficiency
 
 ![poster](poster.png)
 
